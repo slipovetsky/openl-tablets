@@ -22,7 +22,7 @@ import org.apache.cxf.interceptor.LoggingOutInterceptor;
 public class LoggingFeature extends AbstractFeature {
     private static final int DEFAULT_LIMIT = Integer.MAX_VALUE;
 
-    private boolean loggingEnabled = true;
+    private Boolean loggingEnabled;
 
     private LoggingInInterceptor inInterceptor;
     private LoggingOutInterceptor outInterceptor;
@@ -37,6 +37,14 @@ public class LoggingFeature extends AbstractFeature {
     private int limit = DEFAULT_LIMIT;
 
     private boolean prettyLogging;
+
+    private boolean isLoggingEnabled() {
+        return loggingEnabled;
+    }
+
+    public void setLoggingEnabled(Boolean loggingEnabled) {
+        this.loggingEnabled = loggingEnabled;
+    }
 
     @Override
     protected void initializeProvider(InterceptorProvider provider, Bus bus) {
@@ -74,14 +82,6 @@ public class LoggingFeature extends AbstractFeature {
                 provider.getOutFaultInterceptors().add(getOutFaultInterceptor());
             }
         }
-    }
-
-    public boolean isLoggingEnabled() {
-        return loggingEnabled;
-    }
-
-    public void setLoggingEnabled(boolean loggingEnabled) {
-        this.loggingEnabled = loggingEnabled;
     }
 
     public LoggingInInterceptor getInInterceptor() {

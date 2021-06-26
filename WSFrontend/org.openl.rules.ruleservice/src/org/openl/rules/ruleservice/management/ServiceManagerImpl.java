@@ -127,6 +127,18 @@ public class ServiceManagerImpl implements ServiceManager, DataSourceListener, S
         deployServices(newServices);
     }
 
+    @Override
+    public void redeployAll() {
+        for (ServiceDescription serviceDescription : services.values()) {
+            try {
+                undeploy(serviceDescription);
+            } catch (RuleServiceUndeployException e) {
+                log.error("Failed to undeploy service '{}'.", serviceDescription.getDeployPath(), e);
+            }
+        }
+        processServices();
+    }
+
     private Map<String, ServiceDescription> gatherServicesToBeDeployed() {
         try {
             Collection<ServiceDescription> servicesToBeDeployed = serviceConfigurer

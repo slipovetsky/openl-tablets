@@ -36,6 +36,12 @@ public final class SpringInitializer implements ServletContextListener {
 
         applicationContext.setConfigLocations("classpath:openl-ruleservice-ws-beans.xml");
         new PropertySourcesLoader().initialize(applicationContext, servletContext);
+
+        // Register Utility 'Props' class
+        Props.setEnvironment(applicationContext.getEnvironment());
+        applicationContext.addBeanFactoryPostProcessor(bf -> bf.registerSingleton("props", new Props()));
+
+        // Register a WEB context path for easy access from Spring beans
         applicationContext.addBeanFactoryPostProcessor(
             bf -> bf.registerSingleton("servletContextPath", servletContext.getContextPath()));
         applicationContext.refresh();

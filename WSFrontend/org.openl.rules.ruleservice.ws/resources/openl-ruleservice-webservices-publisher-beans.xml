@@ -59,8 +59,8 @@
         <property name="dataBinding" ref="jaxwsServiceDataBinding"/>
         <property name="features">
             <list>
-                <bean id="webServicesLoggingFeature" class="org.openl.rules.ruleservice.storelogdata.LoggingFeature">
-                    <property name="loggingEnabled" value="${ruleservice.logging.enabled}"/>
+                <bean class="org.openl.rules.ruleservice.storelogdata.LoggingFeature">
+                    <property name="loggingEnabled" value="#{${ruleservice.logging.enabled}}"/>
                 </bean>
             </list>
         </property>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:task="http://www.springframework.org/schema/task"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
 
 	<!-- Controls instantiation of OpenL modules and creates service beans and service classes. -->
 	<bean id="instantiationStrategyFactory"
-		class="org.openl.rules.ruleservice.publish.RuleServiceInstantiationStrategyFactoryImpl">
+		  class="org.openl.rules.ruleservice.publish.RuleServiceInstantiationStrategyFactoryImpl">
 		<property name="lazyCompilation" value="${ruleservice.instantiation.strategy.lazy}"/>
 	</bean>
 
@@ -49,12 +49,17 @@
 	<!-- Determines the services that should be exposed using RulesLoader. -->
 	<bean id="serviceConfigurer" class="org.openl.rules.ruleservice.conf.LastVersionProjectsServiceConfigurer">
 		<property name="provideRuntimeContext" value="${ruleservice.isProvideRuntimeContext}"/>
-		<property name="supportVariations" value="${ruleservice.isSupportVariations}" />
-		<property name="supportedGroups" value="${ruleservice.datasource.groups}"/>
-		<property name="datasourceDeploymentPatterns" value="${ruleservice.datasource.deployments}"/>
-	</bean>
+        <property name="supportVariations" value="${ruleservice.isSupportVariations}"/>
+        <property name="supportedGroups" value="${ruleservice.datasource.groups}"/>
+        <property name="datasourceDeploymentPatterns" value="${ruleservice.datasource.deployments}"/>
+    </bean>
 
-	<bean id="serviceManagerStarter" class="org.openl.rules.ruleservice.conf.ServiceManagerStarterBean" depends-on="serviceManager" lazy-init="false">
-		<property name="serviceManager" ref="serviceManager"/>
-	</bean>
+    <bean id="serviceManagerStarter" class="org.openl.rules.ruleservice.conf.ServiceManagerStarterBean"
+          depends-on="serviceManager" lazy-init="false">
+        <property name="serviceManager" ref="serviceManager"/>
+    </bean>
+
+    <bean class="org.openl.rules.ruleservice.conf.SchedulingTasks">
+        <property name="serviceManager" ref="serviceManager"/>
+    </bean>
 </beans>
