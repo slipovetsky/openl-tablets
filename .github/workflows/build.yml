@@ -43,7 +43,7 @@ jobs:
         # https://github.com/abiosoft/colima/issues/54#issuecomment-1250217077
         colima start --cpu 3 --memory 5 --disk 10
         echo "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock" >> $GITHUB_ENV
-        echo "DOCKER_HOST=unix://${HOME}/.colima/docker.sock" >> $GITHUB_ENV
+        echo "DOCKER_HOST=unix://${HOME}/.colima/default/docker.sock" >> $GITHUB_ENV
 
       # Docker is not installed on GitHub's Widows hosted workers due to virtualization issues
       # (and it's necessary to run testcontainers)
