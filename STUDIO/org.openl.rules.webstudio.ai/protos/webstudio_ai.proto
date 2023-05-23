@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package org.openl.rules.webstudio.ai;
+
+service WebstudioAIService {
+  rpc typeahead (TypeaheadRequest) returns (TypeaheadReply) {}
+}
+
+message TypeaheadRequest {
+  string table = 1;
+  string refTypes = 2;
+  string refMethods = 3;
+  string formula = 4;
+}
+
+message TypeaheadReply {
+  repeated string completions = 1;
+}

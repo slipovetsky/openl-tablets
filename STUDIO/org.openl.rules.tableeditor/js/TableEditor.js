@@ -445,7 +445,9 @@ var TableEditor = Class.create({
         if (this.editor) {
             switch (event.keyCode) {
                 case 113: this.editor.handleF2(event); break;
-                case 114: this.editor.handleF3(event); break;
+                case 114:
+                    this.editor.handleF3(event);
+                    break;
             }
             return;
         }
