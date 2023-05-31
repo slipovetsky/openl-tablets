@@ -4,6 +4,7 @@ package org.openl.rules.webstudio.ai;
 
 service WebstudioAIService {
   rpc typeahead (TypeaheadRequest) returns (TypeaheadReply) {}
+  rpc search (SearchRequest) returns (SearchReply) {}
 }
 
 message TypeaheadRequest {
@@ -15,4 +16,19 @@ message TypeaheadRequest {
 
 message TypeaheadReply {
   repeated string completions = 1;
+}
+
+message SearchRequest {
+  string query = 1;
+  repeated TableSyntaxNode tableSyntaxNodes = 2;
+}
+
+message TableSyntaxNode {
+  string table = 1;
+  string type = 2;
+  string uri = 3;
+}
+
+message SearchReply {
+  repeated string uris = 1;
 }

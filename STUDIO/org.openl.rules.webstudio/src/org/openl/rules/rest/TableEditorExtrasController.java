@@ -5,28 +5,26 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.PreDestroy;
 import javax.servlet.http.HttpSession;
 
+import org.openl.rules.lang.xls.XlsNodeTypes;
 import org.openl.rules.lang.xls.syntax.TableSyntaxNode;
 import org.openl.rules.method.ExecutableRulesMethod;
 import org.openl.rules.project.ai.OpenL2TextUtils;
 import org.openl.rules.ui.WebStudio;
 import org.openl.rules.webstudio.ai.WebstudioAIServiceGrpc;
 import org.openl.rules.webstudio.ai.WebstudioAi;
+import org.openl.rules.webstudio.grpc.AIService;
 import org.openl.rules.webstudio.web.util.WebStudioUtils;
 import org.openl.types.IOpenClass;
 import org.openl.types.IOpenMethod;
 import org.openl.types.IOpenMethodHeader;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.PropertyResolver;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.swagger.v3.oas.annotations.Hidden;
 
 @RestController
@@ -35,29 +33,18 @@ import io.swagger.v3.oas.annotations.Hidden;
 public class TableEditorExtrasController {
 
     private static final boolean REPLACE_ALIASES_WITH_BASE_TYPES = true;
+    private static final int MAX_ROWS_DT = Integer.MAX_VALUE;
 
-    private final String grpcAddress;
-    private ManagedChannel channel;
-    private WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub;
+    private final AIService aiService;
 
     @Autowired
-    public TableEditorExtrasController(PropertyResolver environment) {
-        this.grpcAddress = environment.getProperty("webstudio.ai.grpc");
+    public TableEditorExtrasController(AIService aiService) {
+        this.aiService = aiService;
     }
 
     private Set<String> getAITypeahead(TableSyntaxNode tableSyntaxNode, int row, int col, String text) {
         Set<String> completions = new HashSet<>();
-        if (grpcAddress != null) {
-            if (channel == null || channel.isTerminated()) {
-                // Take the host and port from the environment variable
-                String[] parts = grpcAddress.split(":");
-                // Create a channel to connect to the server
-                this.channel = ManagedChannelBuilder.forAddress(parts[0], Integer.parseInt(parts[1]))
-                    .usePlaintext()
-                    .build();
-                // Create a client stub, it is not thread-safe
-                blockingStub = WebstudioAIServiceGrpc.newBlockingStub(channel);
-            }
+        if (aiService.isEnabled()) {
             // Build the request tableRefTypes
             Set<IOpenClass> types = new HashSet<>();
             Set<IOpenMethod> methodRefs = OpenL2TextUtils
@@ -75,10 +62,12 @@ public class TableEditorExtrasController {
             final String refMethods = methodRefs.stream()
                 .map(e -> OpenL2TextUtils.methodHeaderToString(e, REPLACE_ALIASES_WITH_BASE_TYPES))
                 .collect(Collectors.joining(" {}/n"));
+            boolean isDt = XlsNodeTypes.XLS_DT.name().equals(tableSyntaxNode.getType());
             final String table = OpenL2TextUtils.methodToString((ExecutableRulesMethod) tableSyntaxNode.getMember(),
                 REPLACE_ALIASES_WITH_BASE_TYPES,
                 true,
-                false);
+                false,
+                isDt ? MAX_ROWS_DT : Integer.MAX_VALUE);
 
             // Send a gRPC request and handle the response
             WebstudioAi.TypeaheadRequest request = WebstudioAi.TypeaheadRequest.newBuilder()
@@ -87,6 +76,7 @@ public class TableEditorExtrasController {
                 .setRefTypes(refTypes)
                 .setFormula(text)
                 .build();
+            WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub = aiService.getBlockingStub();
             WebstudioAi.TypeaheadReply response = blockingStub.typeahead(request);
             for (int i = 0; i < response.getCompletionsCount(); i++) {
                 completions.add(text + response.getCompletions(i));
@@ -124,11 +114,5 @@ public class TableEditorExtrasController {
             return result.toArray(new String[0]);
         }
         return new String[] {};
-    }
-
-    @PreDestroy
-    void destroy() {
-        // Close the channel
-        channel.shutdown();
     }
 }
