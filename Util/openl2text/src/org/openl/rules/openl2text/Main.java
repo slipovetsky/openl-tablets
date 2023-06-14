@@ -75,6 +75,10 @@ public class Main implements Runnable {
             "--max-rows" }, description = "Specifies maximum number of rows to include in the output. If not specified all rows will be included.")
     private int maxRows;
 
+    @CommandLine.Option(names = {
+            "--parsing-mode" }, description = "If specified the tables will not be compiled. This option can be used if Excel file contains non OpenL Tablets rules")
+    private boolean parsingMode;
+
     private Path tempDirectory;
 
     @Override
@@ -173,7 +177,8 @@ public class Main implements Runnable {
                             omitDispatchingMethods,
                             tableAsCode,
                             onlyMethodCells,
-                            maxRows);
+                            maxRows,
+                            parsingMode);
                         extractor.run();
                         // Create a zip file from tempOutDirectory in the output directory, tar has a limitation of 100
                         // chars for file names
@@ -207,7 +212,8 @@ public class Main implements Runnable {
     }
 
     private boolean isExcelFile(File file) {
-        return file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx");
+        return file.getName().endsWith(".xls") || file.getName().endsWith(".xlsx") || file.getName()
+            .endsWith(".xlsm") || file.getName().endsWith(".xlsb");
     }
 
     // Don't use FilesUtils from commons-io because it doesn't work on Windows with space in the end of the path
