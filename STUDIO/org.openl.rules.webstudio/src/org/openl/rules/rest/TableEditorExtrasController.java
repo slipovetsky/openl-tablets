@@ -18,7 +18,6 @@ import org.openl.rules.webstudio.grpc.AIService;
 import org.openl.rules.webstudio.web.util.WebStudioUtils;
 import org.openl.types.IOpenClass;
 import org.openl.types.IOpenMethod;
-import org.openl.types.IOpenMethodHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,8 +41,8 @@ public class TableEditorExtrasController {
         this.aiService = aiService;
     }
 
-    private Set<String> getAITypeahead(TableSyntaxNode tableSyntaxNode, int row, int col, String text) {
-        Set<String> completions = new HashSet<>();
+    private Set<String> getReplacementOptions(TableSyntaxNode tableSyntaxNode, int row, int col, String text) {
+        Set<String> options = new HashSet<>();
         if (aiService.isEnabled()) {
             // Build the request tableRefTypes
             Set<IOpenClass> types = new HashSet<>();
@@ -70,48 +69,33 @@ public class TableEditorExtrasController {
                 isDt ? MAX_ROWS_DT : Integer.MAX_VALUE);
 
             // Send a gRPC request and handle the response
-            WebstudioAi.TypeaheadRequest request = WebstudioAi.TypeaheadRequest.newBuilder()
+            WebstudioAi.GenFormulaRequest request = WebstudioAi.GenFormulaRequest.newBuilder()
                 .setTable(table)
                 .setRefMethods(refMethods)
                 .setRefTypes(refTypes)
-                .setFormula(text)
+                .setInputText(text)
                 .build();
             WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub = aiService.getBlockingStub();
-            WebstudioAi.TypeaheadReply response = blockingStub.typeahead(request);
-            for (int i = 0; i < response.getCompletionsCount(); i++) {
-                completions.add(text + response.getCompletions(i));
+            WebstudioAi.GenFormulaReply response = blockingStub.genFormula(request);
+            for (int i = 0; i < response.getOptionsCount(); i++) {
+                options.add(response.getOptions(i));
             }
         }
-        return completions;
+        return options;
     }
 
-    private Set<String> getClassicTypeahead(TableSyntaxNode tableSyntaxNode, int row, int col, String text) {
-        Set<String> vars = new HashSet<>();
-        if (tableSyntaxNode.getMember() instanceof IOpenMethodHeader) {
-            IOpenMethodHeader openMethodHeader = (IOpenMethodHeader) tableSyntaxNode.getMember();
-            for (int i = 0; i < openMethodHeader.getSignature().getNumberOfParameters(); i++) {
-                vars.add(openMethodHeader.getSignature().getParameterName(i));
-            }
-        }
-        return vars;
-    }
-
-    @GetMapping(value = "/typeahead")
-    public String[] typeahead(HttpSession httpSession, int row, int col, String text) {
+    @GetMapping(value = "/gen_one_line_code")
+    public String[] getOneLineCode(HttpSession httpSession, int row, int col, String text) {
         byte[] decodedBytes = Base64.getDecoder().decode(text);
         text = new String(decodedBytes);
-
-        WebStudio studio = WebStudioUtils.getWebStudio(httpSession);
-        String tableUri = studio.getTableUri();
-        Set<String> vars = new HashSet<>();
-        if (tableUri != null) {
-            TableSyntaxNode tableSyntaxNode = studio.getModel().findNode(tableUri);
-            Set<String> classicTypeahead = getClassicTypeahead(tableSyntaxNode, row, col, text);
-            Set<String> aiTypeahead = getAITypeahead(tableSyntaxNode, row, col, text);
-            Set<String> result = new HashSet<>();
-            result.addAll(classicTypeahead);
-            result.addAll(aiTypeahead);
-            return result.toArray(new String[0]);
+        if (text.contains("///")) {
+            WebStudio studio = WebStudioUtils.getWebStudio(httpSession);
+            String tableUri = studio.getTableUri();
+            if (tableUri != null) {
+                TableSyntaxNode tableSyntaxNode = studio.getModel().findNode(tableUri);
+                Set<String> replacementOptions = getReplacementOptions(tableSyntaxNode, row, col, text);
+                return replacementOptions.toArray(new String[0]);
+            }
         }
         return new String[] {};
     }

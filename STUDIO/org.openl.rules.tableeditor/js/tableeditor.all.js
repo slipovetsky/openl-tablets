@@ -1913,7 +1913,7 @@ var BaseTextEditor = Class.create(BaseEditor, {
             } else {
                 context = serverEndpoint.split("/")[0];
             }
-            xhr.open('GET', "/" + context + "/web/tableEditor/typeahead?row=" + row + "&col=" + col + "&text=" + btoa(inputValue), false);
+            xhr.open('GET', "/" + context + "/web/tableEditor/gen_one_line_code?row=" + row + "&col=" + col + "&text=" + btoa(inputValue), false);
 
             xhr.onload = function () {
                 if (xhr.status === 200) {
@@ -1965,37 +1965,40 @@ var BaseTextEditor = Class.create(BaseEditor, {
             clearTimeout(self.inputTimeout); // Clear the previous timeout
             self.inputTimeout = setTimeout(function () {
                 var inputValue = this.value;
+                var containsTripleSlash = inputValue.includes("///");
+                if (containsTripleSlash) {
+                    loadOptions(inputValue, function () {
+                        self.closeAutocompleteList();
+                        var autocompleteList = createOrGetAutocompleteList();
+                        // Create a new list to hold matching options
+                        var matchingOptions = document.createElement("div");
+                        matchingOptions.setAttribute("id", "autocomplete-options");
+                        autocompleteList.appendChild(matchingOptions);
 
-                loadOptions(inputValue, function () {
-                    self.closeAutocompleteList();
-                    var autocompleteList = createOrGetAutocompleteList();
-                    // Create a new list to hold matching options
-                    var matchingOptions = document.createElement("div");
-                    matchingOptions.setAttribute("id", "autocomplete-options");
-                    autocompleteList.appendChild(matchingOptions);
+                        // Find matching options from the autocompleteOptions list
+                        /* var matchingValues = autocompleteOptions.filter(function (option) {
+                            return crossLen(inputValue, option) > 0;
+                        }); */
 
-                    // Find matching options from the autocompleteOptions list
-                    var matchingValues = autocompleteOptions.filter(function (option) {
-                        return crossLen(inputValue, option) > 0;
-                    });
-
-                    // Create and append option elements to the list
-                    matchingValues.forEach(function (value) {
-                        var option = document.createElement("div");
-                        if (inputValue) {
-                            var k = crossLen(inputValue, value);
-                            var s = value.substr(0, k);
-                            option.innerHTML = "<strong>" + s + "</strong>" + value.substr(s.length);
-                        }
-                        option.addEventListener("click", function () {
-                            self.input.value = value;
-                            self.closeAutocompleteList();
+                        // Create and append option elements to the list
+                        autocompleteOptions.forEach(function (value) {
+                            var option = document.createElement("div");
+                            if (inputValue) {
+                                // var k = crossLen(inputValue, value);
+                                // var s = value.substr(0, k);
+                                // option.innerHTML = "<strong>" + s + "</strong>" + value.substr(s.length);
+                                option.innerHTML = value;
+                            }
+                            option.addEventListener("click", function () {
+                                self.input.value = value;
+                                self.closeAutocompleteList();
+                            });
+                            matchingOptions.appendChild(option);
                         });
-                        matchingOptions.appendChild(option);
+                        // Show the autocomplete list
+                        autocompleteList.style.display = "block";
                     });
-                    // Show the autocomplete list
-                    autocompleteList.style.display = "block";
-                });
+                }
             }.bind(this), 1500);
         });
 

@@ -19,6 +19,8 @@ import org.springframework.stereotype.Component;
 public class AISearchImpl implements AISearch {
 
     private static final int MAX_ROWS_DT = Integer.MAX_VALUE;
+    private static final boolean LLM_FILTERING = true;
+    private static final int MAX_RESULTS_COUNT = 10;
 
     private final AIService aiService;
 
@@ -43,7 +45,10 @@ public class AISearchImpl implements AISearch {
     public List<TableSyntaxNode> filter(String query, List<TableSyntaxNode> tableSyntaxNodes) {
         if (aiService.isEnabled() && tableSyntaxNodes != null && !tableSyntaxNodes.isEmpty()) {
             WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub = aiService.getBlockingStub();
-            WebstudioAi.SearchRequest.Builder builder = WebstudioAi.SearchRequest.newBuilder().setQuery(query);
+            WebstudioAi.SearchRequest.Builder builder = WebstudioAi.SearchRequest.newBuilder()
+                .setQuery(query)
+                .setLimit(MAX_RESULTS_COUNT)
+                .setLlmFiltering(LLM_FILTERING);
             tableSyntaxNodes.stream().map(this::toProtoTableSyntaxNode).forEach(builder::addTableSyntaxNodes);
             WebstudioAi.SearchRequest searchRequest = builder.build();
             WebstudioAi.SearchReply searchReply = blockingStub.search(searchRequest);

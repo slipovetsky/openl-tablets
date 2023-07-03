@@ -3,24 +3,27 @@ syntax = "proto3";
 package org.openl.rules.webstudio.ai;
 
 service WebstudioAIService {
-  rpc typeahead (TypeaheadRequest) returns (TypeaheadReply) {}
+  rpc genFormula (GenFormulaRequest) returns (GenFormulaReply) {}
   rpc search (SearchRequest) returns (SearchReply) {}
 }
 
-message TypeaheadRequest {
+message GenFormulaRequest {
   string table = 1;
   string refTypes = 2;
   string refMethods = 3;
-  string formula = 4;
+  string inputText = 4;
+  TableSyntaxNode tableSyntaxNode = 5;
 }
 
-message TypeaheadReply {
-  repeated string completions = 1;
+message GenFormulaReply {
+  repeated string options = 1;
 }
 
 message SearchRequest {
   string query = 1;
-  repeated TableSyntaxNode tableSyntaxNodes = 2;
+  int32 limit = 2;
+  bool llmFiltering = 3;
+  repeated TableSyntaxNode tableSyntaxNodes = 4;
 }
 
 message TableSyntaxNode {
