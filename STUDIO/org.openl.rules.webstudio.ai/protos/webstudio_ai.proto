@@ -5,6 +5,7 @@ package org.openl.rules.webstudio.ai;
 service WebstudioAIService {
   rpc genFormula (GenFormulaRequest) returns (GenFormulaReply) {}
   rpc search (SearchRequest) returns (SearchReply) {}
+  rpc chat (ChatRequest) returns (ChatReply) {}
 }
 
 message GenFormulaRequest {
@@ -34,4 +35,34 @@ message TableSyntaxNode {
 
 message SearchReply {
   repeated string uris = 1;
+}
+
+message ChatRequest {
+  string message = 1;
+  ChatType chatType = 2;
+  repeated ChatMessage history = 3;
+}
+
+enum MessageType {
+  USER = 0;
+  ASSISTANT = 1;
+}
+
+enum ChatType {
+  KNOWLEDGE = 0;
+}
+
+message ChatMessage {
+  MessageType type = 1;
+  string text = 2;
+  repeated Ref refs = 3;
+}
+
+message ChatReply {
+  repeated ChatMessage messages = 1;
+}
+
+message Ref {
+  string title = 1;
+  string url = 2;
 }

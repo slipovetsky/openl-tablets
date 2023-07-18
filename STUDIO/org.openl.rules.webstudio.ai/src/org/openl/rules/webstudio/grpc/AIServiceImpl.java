@@ -15,7 +15,6 @@ import io.grpc.StatusRuntimeException;
 public class AIServiceImpl implements AIService {
     private final String grpcAddress;
     private volatile ManagedChannel channel;
-    private volatile WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub;
     private volatile long lastGrpcCheckTime = 0L;
 
     @Autowired
@@ -33,8 +32,7 @@ public class AIServiceImpl implements AIService {
     }
 
     public ManagedChannel getChannel() {
-        if (channel == null || channel.isTerminated() || blockingStub == null || System
-            .currentTimeMillis() - lastGrpcCheckTime < 15000) {
+        if (channel == null || channel.isTerminated() || System.currentTimeMillis() - lastGrpcCheckTime < 15000) {
             // Take the host and port from the environment variable
             String[] parts = grpcAddress.split(":");
             // Create a channel to connect to the server
@@ -44,10 +42,8 @@ public class AIServiceImpl implements AIService {
             try {
                 this.lastGrpcCheckTime = System.currentTimeMillis();
                 this.channel.getState(true); // Check if the channel is in a ready state
-                this.blockingStub = WebstudioAIServiceGrpc.newBlockingStub(this.channel);
             } catch (StatusRuntimeException ignored) {
                 this.channel = null;
-                this.blockingStub = null;
             }
         }
         return channel;
@@ -55,7 +51,7 @@ public class AIServiceImpl implements AIService {
 
     @Override
     public WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub getBlockingStub() {
-        return this.blockingStub;
+        return WebstudioAIServiceGrpc.newBlockingStub(getChannel());
     }
 
     @PreDestroy
