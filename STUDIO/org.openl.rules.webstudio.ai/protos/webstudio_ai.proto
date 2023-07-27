@@ -39,8 +39,9 @@ message SearchReply {
 
 message ChatRequest {
   string message = 1;
-  ChatType chatType = 2;
-  repeated ChatMessage history = 3;
+  repeated string tables = 2;
+  ChatType chatType = 3;
+  repeated ChatMessage history = 4;
 }
 
 enum MessageType {

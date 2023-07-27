@@ -5,9 +5,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.servlet.http.HttpSession;
+
+import org.openl.rules.lang.xls.syntax.TableSyntaxNode;
+import org.openl.rules.method.ExecutableRulesMethod;
+import org.openl.rules.project.ai.OpenL2TextUtils;
+import org.openl.rules.ui.WebStudio;
 import org.openl.rules.webstudio.ai.WebstudioAIServiceGrpc;
 import org.openl.rules.webstudio.ai.WebstudioAi;
 import org.openl.rules.webstudio.grpc.AIService;
+import org.openl.rules.webstudio.web.util.WebStudioUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -125,16 +132,31 @@ public class AssistantController {
         return refs.stream().map(e -> new Ref(e.getUrl(), e.getTitle())).collect(Collectors.toList());
     }
 
-    @PostMapping(value = "/ask_help")
-    public Message[] askHelp(@RequestBody MessageArrayWrapper messageArrayWrapper) {
+    @PostMapping(value = "/ask_help") public Message[] askHelp(HttpSession httpSession,
+            @RequestBody MessageArrayWrapper messageArrayWrapper) {
         Message[] messages = messageArrayWrapper.getMessages().toArray(new Message[0]);
         // get all messages except the last one are ignored
         Message[] history = new Message[messages.length - 1];
         if (history.length > 0) {
             System.arraycopy(messages, 0, history, 0, messages.length - 1);
         }
+
+        WebStudio studio = WebStudioUtils.getWebStudio(httpSession);
+        String tableUri = studio.getTableUri();
+        String currentOpenedTable = null;
+        if (tableUri != null) {
+            TableSyntaxNode tableSyntaxNode = studio.getModel().findNode(tableUri);
+            if (tableSyntaxNode != null) {
+                currentOpenedTable = OpenL2TextUtils.methodToString((ExecutableRulesMethod) tableSyntaxNode.getMember(),
+                        false,
+                        false,
+                        false,
+                        Integer.MAX_VALUE);
+            }
+        }
+
         Message lastMessage = messages[messages.length - 1];
-        WebstudioAi.ChatRequest request = WebstudioAi.ChatRequest.newBuilder()
+        WebstudioAi.ChatRequest.Builder chatRequestBuilder = WebstudioAi.ChatRequest.newBuilder()
             .setChatType(WebstudioAi.ChatType.KNOWLEDGE)
             .setMessage(lastMessage.text)
             .addAllHistory(Stream.of(history)
@@ -142,9 +164,11 @@ public class AssistantController {
                     .setText(e.text)
                     .setType(CHAT_TYPE_USER.equals(e.getType()) ? WebstudioAi.MessageType.USER
                                                                 : WebstudioAi.MessageType.ASSISTANT)
-                    .build())
-                .collect(Collectors.toList()))
-            .build();
+                    .build()).collect(Collectors.toList()));
+        if (currentOpenedTable != null) {
+            chatRequestBuilder.addTables(currentOpenedTable);
+        }
+        WebstudioAi.ChatRequest request = chatRequestBuilder.build();
         WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub = aiService.getBlockingStub();
         WebstudioAi.ChatReply response = blockingStub.chat(request);
         return response.getMessagesList()
