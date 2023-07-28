@@ -3,12 +3,12 @@ syntax = "proto3";
 package org.openl.rules.webstudio.ai;
 
 service WebstudioAIService {
-  rpc genFormula (GenFormulaRequest) returns (GenFormulaReply) {}
+  rpc editCell (EditCellRequest) returns (EditCellReply) {}
   rpc search (SearchRequest) returns (SearchReply) {}
   rpc chat (ChatRequest) returns (ChatReply) {}
 }
 
-message GenFormulaRequest {
+message EditCellRequest {
   string table = 1;
   string refTypes = 2;
   string refMethods = 3;
@@ -16,7 +16,7 @@ message GenFormulaRequest {
   TableSyntaxNode tableSyntaxNode = 5;
 }
 
-message GenFormulaReply {
+message EditCellReply {
   repeated string options = 1;
 }
 
@@ -42,6 +42,8 @@ message ChatRequest {
   repeated string tables = 2;
   ChatType chatType = 3;
   repeated ChatMessage history = 4;
+  string refTypes = 5;
+  string refMethods = 6;
 }
 
 enum MessageType {

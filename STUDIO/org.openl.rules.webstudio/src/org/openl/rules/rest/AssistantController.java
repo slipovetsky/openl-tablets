@@ -1,7 +1,9 @@
 package org.openl.rules.rest;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -15,6 +17,8 @@ import org.openl.rules.webstudio.ai.WebstudioAIServiceGrpc;
 import org.openl.rules.webstudio.ai.WebstudioAi;
 import org.openl.rules.webstudio.grpc.AIService;
 import org.openl.rules.webstudio.web.util.WebStudioUtils;
+import org.openl.types.IOpenClass;
+import org.openl.types.IOpenMethod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -144,6 +148,7 @@ public class AssistantController {
         WebStudio studio = WebStudioUtils.getWebStudio(httpSession);
         String tableUri = studio.getTableUri();
         String currentOpenedTable = null;
+        WebstudioAi.ChatRequest.Builder chatRequestBuilder = WebstudioAi.ChatRequest.newBuilder();
         if (tableUri != null) {
             TableSyntaxNode tableSyntaxNode = studio.getModel().findNode(tableUri);
             if (tableSyntaxNode != null) {
@@ -152,22 +157,39 @@ public class AssistantController {
                         false,
                         false,
                         Integer.MAX_VALUE);
+
+                Set<IOpenClass> types = new HashSet<>();
+                Set<IOpenMethod> methodRefs = OpenL2TextUtils.methodRefs((ExecutableRulesMethod) tableSyntaxNode.getMember());
+                final boolean replaceAliasesWithBaseTypes = false;
+                for (IOpenClass type : OpenL2TextUtils.methodTypes((ExecutableRulesMethod) tableSyntaxNode.getMember())) {
+                    OpenL2TextUtils.collectTypes(type, types, 1, replaceAliasesWithBaseTypes);
+                }
+                for (IOpenMethod method : methodRefs) {
+                    OpenL2TextUtils.collectTypes(method.getType(), types, 1, replaceAliasesWithBaseTypes);
+                }
+                final String refTypes = types.stream()
+                        .map(e -> OpenL2TextUtils.openClassToString(e, replaceAliasesWithBaseTypes))
+                        .collect(Collectors.joining("/n/n"));
+                // Build the request tableRefMethods
+                final String refMethods = methodRefs.stream()
+                        .map(e -> OpenL2TextUtils.methodHeaderToString(e, replaceAliasesWithBaseTypes))
+                        .collect(Collectors.joining(" {}/n"));
+
+                chatRequestBuilder.addTables(currentOpenedTable);
+                chatRequestBuilder.setRefMethods(refMethods);
+                chatRequestBuilder.setRefTypes(refTypes);
             }
         }
 
         Message lastMessage = messages[messages.length - 1];
-        WebstudioAi.ChatRequest.Builder chatRequestBuilder = WebstudioAi.ChatRequest.newBuilder()
-            .setChatType(WebstudioAi.ChatType.KNOWLEDGE)
+        chatRequestBuilder.setChatType(WebstudioAi.ChatType.KNOWLEDGE)
             .setMessage(lastMessage.text)
             .addAllHistory(Stream.of(history)
                 .map(e -> WebstudioAi.ChatMessage.newBuilder()
                     .setText(e.text)
                     .setType(CHAT_TYPE_USER.equals(e.getType()) ? WebstudioAi.MessageType.USER
-                                                                : WebstudioAi.MessageType.ASSISTANT)
-                    .build()).collect(Collectors.toList()));
-        if (currentOpenedTable != null) {
-            chatRequestBuilder.addTables(currentOpenedTable);
-        }
+                                                                : WebstudioAi.MessageType.ASSISTANT).build())
+                    .collect(Collectors.toList()));
         WebstudioAi.ChatRequest request = chatRequestBuilder.build();
         WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub = aiService.getBlockingStub();
         WebstudioAi.ChatReply response = blockingStub.chat(request);

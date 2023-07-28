@@ -56,7 +56,6 @@ var BaseEditor = Class.create({
 
     setValue: function(value) {
         this.input.value = value;
-        this.input.dispatchEvent(new Event("input"));
     },
 
     getDisplayValue: function() {
