@@ -42,8 +42,8 @@ message ChatRequest {
   repeated string tables = 2;
   ChatType chatType = 3;
   repeated ChatMessage history = 4;
-  string refTypes = 5;
-  string refMethods = 6;
+  repeated string refTypes = 5;
+  repeated string refMethods = 6;
 }
 
 enum MessageType {

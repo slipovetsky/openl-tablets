@@ -261,6 +261,28 @@
 
         var smartAssistantHistory = []
 
+        function formattedMessage(inputText) {
+            var text = inputText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            // Split the 'text' into an array of paragraphs based on line breaks
+            const paragraphs = text.split('\n');
+
+            // Initialize an empty variable to hold the formatted text
+            let formattedMessage = "";
+
+            // Loop through each paragraph and wrap it with <p>...</p> tags
+            for (const paragraph of paragraphs) {
+                // Remove leading and trailing white spaces from each paragraph
+                const trimmedParagraph = paragraph.trim();
+
+                // Skip empty paragraphs (optional)
+                if (trimmedParagraph !== "") {
+                    // Wrap the paragraph with <p>...</p> tags and append to the formatted text
+                    formattedMessage += "<p>" + trimmedParagraph + "</p>";
+                }
+            }
+            return formattedMessage;
+        }
+
         function smartAssistantSendMessage() {
             var userInput = document.getElementById("smartAssistantUserInput");
             var chatMessages = document.getElementById("smartAssistantChatMessages");
@@ -272,8 +294,7 @@
                 sentWrapper.appendChild(sentMessageElement);
                 sentWrapper.classList.add("smartAssistantSent")
                 // Escape message
-                message = message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                sentMessageElement.innerHTML = "<p><b>You:</b></p>" + message;
+                sentMessageElement.innerHTML = "<p><b>You:</b></p>" + formattedMessage(message);
                 chatMessages.appendChild(sentWrapper);
                 userInput.value = "";
 
@@ -298,7 +319,7 @@
                     response.forEach((receivedMessage) => {
                         smartAssistantHistory.push({text: receivedMessage["text"], type: "ASSISTANT"});
                         // visibility of smartAssistantRegenerateLastMessage
-                        smartAssistantAddMessage(receivedMessage["text"].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"), receivedMessage["refs"]);
+                        smartAssistantAddMessage(formattedMessage(receivedMessage["text"]), receivedMessage["refs"]);
                     });
                 }).catch(() => {
                 smartAssistantHistory.push({text: "", type: "ASSISTANT"});

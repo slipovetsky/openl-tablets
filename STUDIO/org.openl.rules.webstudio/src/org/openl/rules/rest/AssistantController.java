@@ -39,6 +39,9 @@ public class AssistantController {
     private final static String CHAT_TYPE_ASSISTANT = "ASSISTANT";
     private final static String CHAT_TYPE_USER = "USER";
 
+    private final boolean REPLACE_ALIAS_TYPES_WITH_BASE = false;
+    private final int MAX_DEPTH_COLLECT_TYPES = 1;
+
     private final AIService aiService;
 
     @Autowired
@@ -160,24 +163,23 @@ public class AssistantController {
 
                 Set<IOpenClass> types = new HashSet<>();
                 Set<IOpenMethod> methodRefs = OpenL2TextUtils.methodRefs((ExecutableRulesMethod) tableSyntaxNode.getMember());
-                final boolean replaceAliasesWithBaseTypes = false;
                 for (IOpenClass type : OpenL2TextUtils.methodTypes((ExecutableRulesMethod) tableSyntaxNode.getMember())) {
-                    OpenL2TextUtils.collectTypes(type, types, 1, replaceAliasesWithBaseTypes);
+                    OpenL2TextUtils.collectTypes(type, types, MAX_DEPTH_COLLECT_TYPES, REPLACE_ALIAS_TYPES_WITH_BASE);
                 }
                 for (IOpenMethod method : methodRefs) {
-                    OpenL2TextUtils.collectTypes(method.getType(), types, 1, replaceAliasesWithBaseTypes);
+                    OpenL2TextUtils.collectTypes(method.getType(),
+                            types,
+                            MAX_DEPTH_COLLECT_TYPES,
+                            REPLACE_ALIAS_TYPES_WITH_BASE);
                 }
-                final String refTypes = types.stream()
-                        .map(e -> OpenL2TextUtils.openClassToString(e, replaceAliasesWithBaseTypes))
-                        .collect(Collectors.joining("/n/n"));
+                types.stream()
+                        .map(e -> OpenL2TextUtils.openClassToString(e, REPLACE_ALIAS_TYPES_WITH_BASE))
+                        .forEach(chatRequestBuilder::addRefTypes);
                 // Build the request tableRefMethods
-                final String refMethods = methodRefs.stream()
-                        .map(e -> OpenL2TextUtils.methodHeaderToString(e, replaceAliasesWithBaseTypes))
-                        .collect(Collectors.joining(" {}/n"));
-
+                methodRefs.stream()
+                        .map(e -> OpenL2TextUtils.methodHeaderToString(e, REPLACE_ALIAS_TYPES_WITH_BASE) + "{}")
+                        .forEach(chatRequestBuilder::addRefMethods);
                 chatRequestBuilder.addTables(currentOpenedTable);
-                chatRequestBuilder.setRefMethods(refMethods);
-                chatRequestBuilder.setRefTypes(refTypes);
             }
         }
 
@@ -187,9 +189,8 @@ public class AssistantController {
             .addAllHistory(Stream.of(history)
                 .map(e -> WebstudioAi.ChatMessage.newBuilder()
                     .setText(e.text)
-                    .setType(CHAT_TYPE_USER.equals(e.getType()) ? WebstudioAi.MessageType.USER
-                                                                : WebstudioAi.MessageType.ASSISTANT).build())
-                    .collect(Collectors.toList()));
+                    .setType(CHAT_TYPE_USER.equals(e.getType()) ? WebstudioAi.MessageType.USER :
+                             WebstudioAi.MessageType.ASSISTANT).build()).collect(Collectors.toList()));
         WebstudioAi.ChatRequest request = chatRequestBuilder.build();
         WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub = aiService.getBlockingStub();
         WebstudioAi.ChatReply response = blockingStub.chat(request);
