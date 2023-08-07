@@ -139,8 +139,8 @@ public class AssistantController {
         return refs.stream().map(e -> new Ref(e.getUrl(), e.getTitle())).collect(Collectors.toList());
     }
 
-    @PostMapping(value = "/ask_help") public Message[] askHelp(HttpSession httpSession,
-            @RequestBody MessageArrayWrapper messageArrayWrapper) {
+    @PostMapping(value = "/ask_help")
+    public Message[] askHelp(HttpSession httpSession, @RequestBody MessageArrayWrapper messageArrayWrapper) {
         Message[] messages = messageArrayWrapper.getMessages().toArray(new Message[0]);
         // get all messages except the last one are ignored
         Message[] history = new Message[messages.length - 1];
@@ -156,30 +156,35 @@ public class AssistantController {
             TableSyntaxNode tableSyntaxNode = studio.getModel().findNode(tableUri);
             if (tableSyntaxNode != null) {
                 currentOpenedTable = OpenL2TextUtils.methodToString((ExecutableRulesMethod) tableSyntaxNode.getMember(),
-                        false,
-                        false,
-                        false,
-                        Integer.MAX_VALUE);
+                    false,
+                    false,
+                    false,
+                    Integer.MAX_VALUE);
 
                 Set<IOpenClass> types = new HashSet<>();
-                Set<IOpenMethod> methodRefs = OpenL2TextUtils.methodRefs((ExecutableRulesMethod) tableSyntaxNode.getMember());
-                for (IOpenClass type : OpenL2TextUtils.methodTypes((ExecutableRulesMethod) tableSyntaxNode.getMember())) {
+                Set<IOpenMethod> methodRefs = OpenL2TextUtils
+                    .methodRefs((ExecutableRulesMethod) tableSyntaxNode.getMember());
+                for (IOpenClass type : OpenL2TextUtils
+                    .methodTypes((ExecutableRulesMethod) tableSyntaxNode.getMember())) {
                     OpenL2TextUtils.collectTypes(type, types, MAX_DEPTH_COLLECT_TYPES, REPLACE_ALIAS_TYPES_WITH_BASE);
                 }
                 for (IOpenMethod method : methodRefs) {
-                    OpenL2TextUtils.collectTypes(method.getType(),
-                            types,
-                            MAX_DEPTH_COLLECT_TYPES,
-                            REPLACE_ALIAS_TYPES_WITH_BASE);
+                    OpenL2TextUtils
+                        .collectTypes(method.getType(), types, MAX_DEPTH_COLLECT_TYPES, REPLACE_ALIAS_TYPES_WITH_BASE);
                 }
                 types.stream()
-                        .map(e -> OpenL2TextUtils.openClassToString(e, REPLACE_ALIAS_TYPES_WITH_BASE))
-                        .forEach(chatRequestBuilder::addRefTypes);
+                    .map(e -> OpenL2TextUtils.openClassToString(e, REPLACE_ALIAS_TYPES_WITH_BASE))
+                    .forEach(chatRequestBuilder::addRefTypes);
                 // Build the request tableRefMethods
                 methodRefs.stream()
-                        .map(e -> OpenL2TextUtils.methodHeaderToString(e, REPLACE_ALIAS_TYPES_WITH_BASE) + "{}")
-                        .forEach(chatRequestBuilder::addRefMethods);
-                chatRequestBuilder.addTables(currentOpenedTable);
+                    .map(e -> OpenL2TextUtils.methodHeaderToString(e, REPLACE_ALIAS_TYPES_WITH_BASE) + "{}")
+                    .forEach(chatRequestBuilder::addRefMethods);
+                WebstudioAi.TableSyntaxNode tableSyntaxNodeMessage = WebstudioAi.TableSyntaxNode.newBuilder()
+                    .setUri(tableUri)
+                    .setType(tableSyntaxNode.getType())
+                    .setTable(currentOpenedTable)
+                    .build();
+                chatRequestBuilder.addTableSyntaxNodes(tableSyntaxNodeMessage);
             }
         }
 
@@ -189,8 +194,10 @@ public class AssistantController {
             .addAllHistory(Stream.of(history)
                 .map(e -> WebstudioAi.ChatMessage.newBuilder()
                     .setText(e.text)
-                    .setType(CHAT_TYPE_USER.equals(e.getType()) ? WebstudioAi.MessageType.USER :
-                             WebstudioAi.MessageType.ASSISTANT).build()).collect(Collectors.toList()));
+                    .setType(CHAT_TYPE_USER.equals(e.getType()) ? WebstudioAi.MessageType.USER
+                                                                : WebstudioAi.MessageType.ASSISTANT)
+                    .build())
+                .collect(Collectors.toList()));
         WebstudioAi.ChatRequest request = chatRequestBuilder.build();
         WebstudioAIServiceGrpc.WebstudioAIServiceBlockingStub blockingStub = aiService.getBlockingStub();
         WebstudioAi.ChatReply response = blockingStub.chat(request);
