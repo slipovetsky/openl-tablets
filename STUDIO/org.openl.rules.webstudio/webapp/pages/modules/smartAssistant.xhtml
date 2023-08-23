@@ -11,6 +11,12 @@
             border-radius: 100%;
             box-shadow: 0 3px 6px 0 rgba(0, 35, 64, 0.2);
             cursor: pointer;
+            opacity: 0.8;
+            z-index: 2;
+        }
+
+        #smartAssistantChatIcon:hover {
+            opacity: 1;
         }
 
         #smartAssistantChatPopup {
@@ -95,10 +101,28 @@
             background-color: #d0d0d0;
         }
 
-        #smartAssistantUserInputContainer {
+        #smartAssistantUserInputContainer,
+        #smartAssistantUserInputControls {
             display: flex;
             align-items: center;
             margin: 10px;
+        }
+
+        #smartAssistantUserInputContainer {
+            flex-direction: column;
+        }
+
+        #smartAssistantUserInputControls {
+            flex-direction: row;
+            width: 100%;
+            margin-top: 0;
+        }
+
+        #smartAssistantUserInputLimitError {
+            color: red;
+            display: none;
+            width: 100%;
+            text-align: start;
         }
 
         #smartAssistantUserInputContainer button {
@@ -231,12 +255,16 @@
                class="smartAssistantStopGeneratingButton">Stop Generating</a>
         </div>
         <div id="smartAssistantUserInputContainer">
-            <textarea id="smartAssistantUserInput" placeholder="Type in your question (maximum 1000 characters)…"
-                      style="resize: none; height: 60px; padding: 5px;"
-                      maxlength="1000"
-                      onkeydown="smartAssistantSendMessageOnEnter(event)"
-                      oninput="smartAssistantCheckInput()"></textarea>
-            <button id="smartAssistantSendButton" onclick="smartAssistantSendMessage()">Send</button>
+            <div id="smartAssistantUserInputLimitError">You exceeded 1000-character limit</div>
+            <div id="smartAssistantUserInputControls">
+                <textarea id="smartAssistantUserInput" placeholder="Type in your question (maximum 1000 characters)…"
+                          style="resize: none; height: 60px; padding: 5px;"
+                          maxlength="1000"
+                          onkeydown="smartAssistantSendMessageOnEnter(event)"
+                          oninput="smartAssistantCheckInput()"></textarea>
+                <button id="smartAssistantSendButton" onclick="smartAssistantSendMessage()">Send</button>
+            </div>
+
         </div>
     </div>
 
@@ -253,10 +281,17 @@
         var isSmartAssistantResizingChatPopup = false;
 
         function smartAssistantCheckInput() {
-            const userInput = document.getElementById('smartAssistantUserInput');
-            const sendButton = document.getElementById('smartAssistantSendButton');
+            const userInput = document.getElementById("smartAssistantUserInput");
+            const sendButton = document.getElementById("smartAssistantSendButton");
+            const errorBlock = document.getElementById("smartAssistantUserInputLimitError");
             // Enable the button if the textarea has text, disable it otherwise
-            sendButton.disabled = userInput.value.trim() === '' || smartAssistantWaitingResponses === smartAssistantId;
+            sendButton.disabled = userInput.value.trim() === "" || smartAssistantWaitingResponses === smartAssistantId;
+
+            if (userInput.value.length > 999) {
+                errorBlock.style.display = "block";
+            } else {
+                errorBlock.style.display = "none";
+            }
         }
 
         function smartAssistantStopGeneratingMessage() {
@@ -462,20 +497,20 @@
 
             if (chatPopup.clientWidth === 0 && chatPopup.clientHeight === 0) {
                 // Set the initial width and height
-                nextWidth = Math.min(CHAT_POPUP_INITIAL_WIDTH, windowWidth - 40);
-                nextHeight = Math.min(CHAT_POPUP_INITIAL_HEIGHT, windowHeight - 40);
+                nextWidth = Math.min(CHAT_POPUP_INITIAL_WIDTH, windowWidth - 48);
+                nextHeight = Math.min(CHAT_POPUP_INITIAL_HEIGHT, windowHeight - 84);
             } else if (event) {
                 // Calculate the new width and height
                 nextWidth = chatPopup.offsetWidth - (event.clientX - chatPopup.getBoundingClientRect().left);
                 nextHeight = chatPopup.offsetHeight - (event.clientY - chatPopup.getBoundingClientRect().top);
 
                 // Apply minimum width and height
-                nextWidth = Math.min(nextWidth, windowWidth - 40);
-                nextHeight = Math.min(nextHeight, windowHeight - 40);
+                nextWidth = Math.min(nextWidth, windowWidth - 48);
+                nextHeight = Math.min(nextHeight, windowHeight - 84);
             } else {
                 // Apply minimum width and height
-                nextWidth = Math.min(chatPopup.clientWidth, windowWidth - 40);
-                nextHeight = Math.min(chatPopup.clientHeight, windowHeight - 40);
+                nextWidth = Math.min(chatPopup.clientWidth, windowWidth - 48);
+                nextHeight = Math.min(chatPopup.clientHeight, windowHeight - 84);
             }
 
             nextWidth = Math.max(nextWidth, CHAT_POPUP_MIN_WIDTH);
