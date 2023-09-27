@@ -1,11 +1,10 @@
 <ui:composition
-    xmlns:h="http://java.sun.com/jsf/html"
-    xmlns:ui="http://java.sun.com/jsf/facelets"
-    xmlns:a4j="http://richfaces.org/a4j"
-    xmlns:rich="http://richfaces.org/rich"
-    xmlns:c="http://java.sun.com/jsp/jstl/core"
-    xmlns:oh="http://openl-tablets.sf.net/jsf/html"
-    xmlns:f="http://java.sun.com/jsf/core">
+        xmlns:h="http://java.sun.com/jsf/html"
+        xmlns:ui="http://java.sun.com/jsf/facelets"
+        xmlns:a4j="http://richfaces.org/a4j"
+        xmlns:rich="http://richfaces.org/rich"
+        xmlns:oh="http://openl-tablets.sf.net/jsf/html"
+        xmlns:f="http://java.sun.com/jsf/core">
 
     <style>
         #searchInput input[type='text'] {
@@ -74,10 +73,6 @@
         .removeBtn:hover {
             opacity: 0.4;
         }
-
-        .aiSearchRow {
-            display: flex;
-        }
     </style>
 
     <script>
@@ -94,7 +89,6 @@
             setParam("query", $j("#searchQuery").val());
             setParam("header", $j("#tableHeader").val());
             setParam("searchScope", $j("#searchScopeSelection").val());
-            setParam("useAiSearch", $j("#useAiSearch").prop("checked"));
             setParam("types", $j("#advancedSearch #multiselect-select").val().replace(/, /g, '-'));
 
             $j("#propertiesTable tr:visible").each(function() {
@@ -197,12 +191,6 @@
                         style="margin-left: 9px; padding: 2px 6px" />
                 </div>
             </div>
-            <c:if test="#{aiService.enabled}">
-                <div class="aiSearchRow">
-                    <div style="display: flex; justify-content: center; align-items: center; margin: 0 5px 0 0;"><h:outputLabel for="useAiSearch" value="#{msg['ws.search.ai.search']}"/>:</div>
-                    <div><h:selectBooleanCheckbox id="useAiSearch" value="#{searchBean.useAiSearch}" /></div>
-                </div>
-            </c:if>
             <div style="margin-top: 20px">
                 <input type="submit" value="#{msg['ws.search.search']}" class="button-primary" />
             </div>

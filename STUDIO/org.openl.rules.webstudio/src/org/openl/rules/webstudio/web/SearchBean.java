@@ -21,7 +21,6 @@ import org.openl.rules.ui.ProjectModel;
 import org.openl.rules.webstudio.WebStudioFormats;
 import org.openl.rules.webstudio.web.search.AISearch;
 import org.openl.rules.webstudio.web.search.SearchResult;
-import org.openl.rules.webstudio.web.search.SearchResult;
 import org.openl.rules.webstudio.web.util.WebStudioUtils;
 import org.openl.util.CollectionUtils;
 import org.openl.util.StringUtils;
@@ -65,7 +64,6 @@ public class SearchBean {
 
     private int expectedIndexingDuration;
     private int tableCountForIndexing;
-    private boolean useAiSearch = true;
 
     public SearchBean(AISearch aiSearch) {
         this.aiSearch = aiSearch;
@@ -96,14 +94,6 @@ public class SearchBean {
 
     public int getTableCountForIndexing() {
         return tableCountForIndexing;
-    }
-
-    public boolean getUseAiSearch() {
-        return useAiSearch;
-    }
-
-    public void setUseAiSearch(boolean useAiSearch) {
-        this.useAiSearch = useAiSearch;
     }
 
     public SelectItem[] getSearchScopeItems() {
@@ -163,8 +153,6 @@ public class SearchBean {
                 this.searchScope = SearchScope.valueOf(searchScope);
             }
 
-            this.useAiSearch = Boolean.parseBoolean(useAiSearch);
-
             // Init properties query
             for (TableProperty property : properties) {
                 String propertyValue = WebStudioUtils.getRequestParameter(property.getName());
@@ -216,18 +204,19 @@ public class SearchBean {
                     .filter(selectors)
                     .collect(Collectors.toList());
             String q = query != null ? UriEncoder.decode(query) : null;
-            if (useAiSearch) {
+            Predicate<TableSyntaxNode> cellValueSelector = new CellValueSelector(q);
+            List<TableSyntaxNode> foundTsnes = tnses.stream().filter(cellValueSelector).collect(Collectors.toList());
+            if (StringUtils.isNotBlank(q)) {
                 SearchResult searchResult = aiSearch.filter(q, tnses);
-                tnses = searchResult.getTableSyntaxNodes();
+                List<TableSyntaxNode> tnsesByAiSearch = searchResult.getTableSyntaxNodes();
                 expectedIndexingDuration = searchResult.getExpectedIndexingDuration();
                 tableCountForIndexing = searchResult.getTableCountForIndexing();
+                foundTsnes.addAll(tnsesByAiSearch);
             } else {
-                Predicate<TableSyntaxNode> cellValueSelector = new CellValueSelector(q);
-                tnses = tnses.stream().filter(cellValueSelector).collect(Collectors.toList());
                 expectedIndexingDuration = 0;
                 tableCountForIndexing = 0;
             }
-            searchResults = tnses.stream().map(TableSyntaxNodeAdapter::new).collect(Collectors.toList());
+            searchResults = foundTsnes.stream().map(TableSyntaxNodeAdapter::new).collect(Collectors.toList());
         }
     }
 
