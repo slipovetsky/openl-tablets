@@ -212,7 +212,7 @@ public class StatisticsTest {
         assertEquals(32, covarS(new Double[]{1.0, null, 9.0}, new Double[]{1.0, 10.0, 9.0}), DELTA);
         assertEquals(-20, covarS(new Double[]{-1.0, 10.0, 9.0}, new Double[]{1.0, -15.0, 9.0}), DELTA);
 
-        assertEquals(0.5, covarS(new Long[]{3L, 4L, 8L}, new Long[]{3L, 4L}), DELTA);
+        assertEquals(0.5, covarS(new Long[]{3L, 4L}, new Long[]{3L, 4L}), DELTA);
         assertEquals(7, covarS(new Byte[]{(byte) 3, (byte) 4, (byte) 8}, new Byte[]{(byte) 3, (byte) 4, (byte) 8}), DELTA);
         assertEquals(7, covarS(new Short[]{(short) 3, (short) 4, (short) 8}, new Short[]{(short) 3, (short) 4, (short) 8}), DELTA);
         assertEquals(7, covarS(new Integer[]{3, 4, 8}, new Integer[]{3, 4, 8}), DELTA);
@@ -238,7 +238,7 @@ public class StatisticsTest {
         assertEquals(16, covarP(new Double[]{1.0, null, 9.0}, new Double[]{1.0, 10.0, 9.0}), DELTA);
         assertEquals(-13.333333333333334, covarP(new Double[]{-1.0, 10.0, 9.0}, new Double[]{1.0, -15.0, 9.0}), DELTA);
 
-        assertEquals(0.25, covarP(new Long[]{3L, 4L, 8L}, new Long[]{3L, 4L}), DELTA);
+        assertEquals(0.25, covarP(new Long[]{3L, 4L}, new Long[]{3L, 4L}), DELTA);
         assertEquals(4.666666666666667, covarP(new Byte[]{(byte) 3, (byte) 4, (byte) 8}, new Byte[]{(byte) 3, (byte) 4, (byte) 8}), DELTA);
         assertEquals(4.666666666666667, covarP(new Short[]{(short) 3, (short) 4, (short) 8}, new Short[]{(short) 3, (short) 4, (short) 8}), DELTA);
         assertEquals(4.666666666666667, covarP(new Integer[]{3, 4, 8}, new Integer[]{3, 4, 8}), DELTA);
@@ -264,7 +264,7 @@ public class StatisticsTest {
         assertEquals(0.9999999999999998, correl(new Double[]{1.0, null, 9.0}, new Double[]{1.0, 10.0, 9.0}), DELTA);
         assertEquals(-0.2690610012503157, correl(new Double[]{-1.0, 10.0, 9.0}, new Double[]{1.0, -15.0, 9.0}), DELTA);
 
-        assertEquals(0.9999999999999998, correl(new Long[]{3L, 4L, 8L}, new Long[]{3L, 4L}), DELTA);
+        assertEquals(0.9999999999999998, correl(new Long[]{3L, 4L}, new Long[]{3L, 4L}), DELTA);
         assertEquals(0.9999999999999999, correl(new Byte[]{(byte) 3, (byte) 4, (byte) 8}, new Byte[]{(byte) 3, (byte) 4, (byte) 8}), DELTA);
         assertEquals(0.9999999999999999, correl(new Short[]{(short) 3, (short) 4, (short) 8}, new Short[]{(short) 3, (short) 4, (short) 8}), DELTA);
         assertEquals(0.9999999999999999, correl(new Integer[]{3, 4, 8}, new Integer[]{3, 4, 8}), DELTA);
@@ -289,7 +289,7 @@ public class StatisticsTest {
         assertEquals(0.9999999999999996, rsq(new Double[]{1.0, null, 9.0}, new Double[]{1.0, 10.0, 9.0}), DELTA);
         assertEquals(0.07239382239382237, rsq(new Double[]{-1.0, 10.0, 9.0}, new Double[]{1.0, -15.0, 9.0}), DELTA);
 
-        assertEquals(0.9999999999999996, rsq(new Long[]{3L, 4L, 8L}, new Long[]{3L, 4L}), DELTA);
+        assertEquals(0.9999999999999996, rsq(new Long[]{3L, 4L}, new Long[]{3L, 4L}), DELTA);
         assertEquals(0.9999999999999998, rsq(new Byte[]{(byte) 3, (byte) 4, (byte) 8}, new Byte[]{(byte) 3, (byte) 4, (byte) 8}), DELTA);
         assertEquals(0.9999999999999998, rsq(new Short[]{(short) 3, (short) 4, (short) 8}, new Short[]{(short) 3, (short) 4, (short) 8}), DELTA);
         assertEquals(0.9999999999999998, rsq(new Integer[]{3, 4, 8}, new Integer[]{3, 4, 8}), DELTA);
@@ -314,7 +314,7 @@ public class StatisticsTest {
         assertEquals(1, slope(new Double[]{1.0, null, 9.0}, new Double[]{1.0, 10.0, 9.0}), DELTA);
         assertEquals(-0.13392857142857142, slope(new Double[]{-1.0, 10.0, 9.0}, new Double[]{1.0, -15.0, 9.0}), DELTA);
 
-        assertEquals(1, slope(new Long[]{3L, 4L, 8L}, new Long[]{3L, 4L}), DELTA);
+        assertEquals(1, slope(new Long[]{3L, 4L}, new Long[]{3L, 4L}), DELTA);
         assertEquals(1, slope(new Byte[]{(byte) 3, (byte) 4, (byte) 8}, new Byte[]{(byte) 3, (byte) 4, (byte) 8}), 0);
         assertEquals(1, slope(new Short[]{(short) 3, (short) 4, (short) 8}, new Short[]{(short) 3, (short) 4, (short) 8}), DELTA);
         assertEquals(1, slope(new Integer[]{3, 4, 8}, new Integer[]{3, 4, 8}), DELTA);
@@ -339,7 +339,7 @@ public class StatisticsTest {
         assertEquals(0, intercept(new Double[]{1.0, null, 9.0}, new Double[]{1.0, 10.0, 9.0}), DELTA);
         assertEquals(5.776785714285714, intercept(new Double[]{-1.0, 10.0, 9.0}, new Double[]{1.0, -15.0, 9.0}), DELTA);
 
-        assertEquals(0, intercept(new Long[]{3L, 4L, 8L}, new Long[]{3L, 4L}), DELTA);
+        assertEquals(0, intercept(new Long[]{3L, 4L}, new Long[]{3L, 4L}), DELTA);
 
         assertEquals(0, intercept(new Byte[]{(byte) 3, (byte) 4, (byte) 8}, new Byte[]{(byte) 3, (byte) 4, (byte) 8}), 0);
         assertEquals(0, intercept(new Short[]{(short) 3, (short) 4, (short) 8}, new Short[]{(short) 3, (short) 4, (short) 8}), DELTA);
@@ -365,7 +365,7 @@ public class StatisticsTest {
         assertEquals(1, forecast(1.0, new Double[]{1.0, null, 9.0}, new Double[]{1.0, 10.0, 9.0}), DELTA);
         assertEquals(5.642857142857143, forecast(1.0, new Double[]{-1.0, 10.0, 9.0}, new Double[]{1.0, -15.0, 9.0}), DELTA);
 
-        assertEquals(3, forecast(3L, new Long[]{3L, 4L, 8L}, new Long[]{3L, 4L}), DELTA);
+        assertEquals(3, forecast(3L, new Long[]{3L, 4L}, new Long[]{3L, 4L}), DELTA);
 
         assertEquals(3.0, forecast((byte) 3, new Byte[]{(byte) 3, (byte) 4, (byte) 8}, new Byte[]{(byte) 3, (byte) 4, (byte) 8}), 0);
         assertEquals(3.0, forecast((short) 3, new Short[]{(short) 3, (short) 4, (short) 8}, new Short[]{(short) 3, (short) 4, (short) 8}), DELTA);
